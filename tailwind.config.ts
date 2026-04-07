@@ -58,7 +58,7 @@ export default {
           DEFAULT: "hsl(var(--gold))",
           soft: "hsl(var(--gold-soft))",
         },
-        "green-glow": "hsl(var(--green-glow))",
+        "blue-glow": "hsl(var(--blue-glow))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -97,8 +97,8 @@ export default {
           to: { opacity: "1", transform: "scale(1)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(142 76% 36% / 0.2)" },
-          "50%": { boxShadow: "0 0 40px hsl(142 76% 36% / 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(224 76% 48% / 0.2)" },
+          "50%": { boxShadow: "0 0 40px hsl(224 76% 48% / 0.4)" },
         },
       },
       animation: {
