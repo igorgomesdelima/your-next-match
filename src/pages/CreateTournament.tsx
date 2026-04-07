@@ -1,15 +1,80 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Trophy } from "lucide-react";
 import Footer from "@/components/layout/Footer";
 import logo from "@/assets/matchup-logo.png";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const CreateTournament = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  // 1. Criamos os 'States' para guardar o que o usuário digita
+  const [name, setName] = useState("");
+  const [sport, setSport] = useState("");
+  const [date, setDate] = useState("");
+  const [category, setCategory] = useState("");
+  const [price, setPrice] = useState("");
+
+  // 2. Criamos a função que envia os dados para o banco
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Impede a página de recarregar
+    setLoading(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) throw new Error("Você precisa estar logado!");
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("tournaments").insert([
+        {
+          name: name,
+          sport: sport,
+          date: date,
+          categories: category,
+          price: Number(price) || 0,
+          user_id: user.id,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Seu torneio foi criado e salvo no banco de dados.",
+      });
+
+      navigate("/dashboard"); // Manda o usuário para o painel
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar torneio",
+        description: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
@@ -24,8 +89,11 @@ const CreateTournament = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft size={16} /> Back to Dashboard
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft size={16} /> Voltar ao Dashboard
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
@@ -33,45 +101,59 @@ const CreateTournament = () => {
             <Trophy className="text-primary-foreground" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground">Create Tournament</h1>
-            <p className="text-sm text-muted-foreground">Set up your competition in minutes</p>
+            <h1 className="text-2xl font-extrabold text-foreground">
+              Criar Torneio
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Configure sua competição em minutos
+            </p>
           </div>
         </div>
 
-        <form className="space-y-6">
+        {/* 3. Trocamos a tag <form> simples por uma que aciona a função no 'onSubmit' */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-card rounded-xl border border-border p-6 space-y-5">
-            <h3 className="font-bold text-foreground">Basic Info</h3>
+            <h3 className="font-bold text-foreground">Informações Básicas</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="name">Tournament Name</Label>
-              <Input id="name" placeholder="e.g. Summer Slam 2026" />
+              <Label htmlFor="name">Nome do Torneio *</Label>
+              {/* 4. Conectamos o Input com a variável 'name' */}
+              <Input
+                id="name"
+                placeholder="Ex: Summer Slam 2026"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Sport</Label>
-                <Select>
-                  <SelectTrigger><SelectValue placeholder="Select sport" /></SelectTrigger>
+                <Label>Esporte *</Label>
+                {/* 5. Conectamos o Select com a variável 'sport' */}
+                <Select onValueChange={setSport} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tennis">Tennis</SelectItem>
+                    <SelectItem value="tennis">Tênis</SelectItem>
                     <SelectItem value="beach-tennis">Beach Tennis</SelectItem>
                     <SelectItem value="padel">Padel</SelectItem>
                     <SelectItem value="squash">Squash</SelectItem>
-                    <SelectItem value="badminton">Badminton</SelectItem>
-                    <SelectItem value="pickleball">Pickleball</SelectItem>
+                    <SelectItem value="peteca">Peteca</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Format</Label>
+                <Label>Formato (Visual)</Label>
                 <Select>
-                  <SelectTrigger><SelectValue placeholder="Select format" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="single-elimination">Single Elimination</SelectItem>
-                    <SelectItem value="double-elimination">Double Elimination</SelectItem>
-                    <SelectItem value="round-robin">Round Robin</SelectItem>
-                    <SelectItem value="swiss">Swiss</SelectItem>
+                    <SelectItem value="single">Eliminatória Simples</SelectItem>
+                    <SelectItem value="groups">Fase de Grupos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -79,101 +161,74 @@ const CreateTournament = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Surface</Label>
-                <Select>
-                  <SelectTrigger><SelectValue placeholder="Select surface" /></SelectTrigger>
+                <Label htmlFor="start-date">Data de Início *</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Categoria *</Label>
+                <Select onValueChange={setCategory} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="clay">Clay</SelectItem>
-                    <SelectItem value="hard">Hard Court</SelectItem>
-                    <SelectItem value="grass">Grass</SelectItem>
-                    <SelectItem value="sand">Sand</SelectItem>
-                    <SelectItem value="indoor">Indoor</SelectItem>
+                    <SelectItem value="Iniciante">Iniciante</SelectItem>
+                    <SelectItem value="C">Classe C</SelectItem>
+                    <SelectItem value="B">Classe B</SelectItem>
+                    <SelectItem value="A">Classe A</SelectItem>
+                    <SelectItem value="PRO">PRO</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label>Gender Category</Label>
-                <Select>
-                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="mens">Men's</SelectItem>
-                    <SelectItem value="womens">Women's</SelectItem>
-                    <SelectItem value="mixed">Mixed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start-date">Start Date</Label>
-                <Input id="start-date" type="date" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end-date">End Date</Label>
-                <Input id="end-date" type="date" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" placeholder="e.g. Tennis Club Downtown, NYC" />
             </div>
           </div>
 
           <div className="bg-card rounded-xl border border-border p-6 space-y-5">
-            <h3 className="font-bold text-foreground">Details</h3>
+            <h3 className="font-bold text-foreground">Detalhes</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="max-players">Max Participants</Label>
+                <Label htmlFor="max-players">Máx. Participantes (Visual)</Label>
                 <Input id="max-players" type="number" placeholder="16" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="fee">Entry Fee (optional)</Label>
-                <Input id="fee" placeholder="$0" />
+                <Label htmlFor="fee">Valor da Inscrição (R$) *</Label>
+                <Input
+                  id="fee"
+                  type="number"
+                  placeholder="Ex: 50"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="prizes">Prize / Awards (optional)</Label>
-              <Textarea id="prizes" placeholder="1st place trophy, 2nd place medal..." rows={2} />
+              <Label htmlFor="prizes">Premiação (Visual)</Label>
+              <Textarea
+                id="prizes"
+                placeholder="Troféu para o 1º lugar..."
+                rows={2}
+              />
             </div>
           </div>
 
-          <div className="bg-card rounded-xl border border-border p-6 space-y-5">
-            <h3 className="font-bold text-foreground">Settings</h3>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm text-foreground">Public Tournament</p>
-                <p className="text-xs text-muted-foreground">Anyone can find and join</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm text-foreground">Allow Self-Registration</p>
-                <p className="text-xs text-muted-foreground">Players can register themselves</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm text-foreground">Third-Place Match</p>
-                <p className="text-xs text-muted-foreground">Play a match for 3rd place</p>
-              </div>
-              <Switch />
-            </div>
-          </div>
-
-          <Button variant="hero" className="w-full h-14 text-base" type="button">
-            <Trophy size={20} />
-            Create Tournament
+          {/* 6. Transformamos o botão em type="submit" para ele acionar o form */}
+          <Button
+            variant="hero"
+            className="w-full h-14 text-base bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
+            type="submit"
+            disabled={loading}
+          >
+            <Trophy size={20} className="mr-2" />
+            {loading ? "Criando..." : "Criar Torneio"}
           </Button>
         </form>
       </main>
