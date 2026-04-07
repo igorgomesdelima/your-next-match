@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 
 @layer base {
   :root {
@@ -51,12 +51,33 @@
     --blue-glow: 224 76% 58%;
     --gold: 45 100% 51%;
     --gold-soft: 45 80% 65%;
-    --gradient-hero: linear-gradient(135deg, hsl(213 57% 11%) 0%, hsl(213 40% 20%) 100%);
-    --gradient-primary: linear-gradient(135deg, hsl(224 76% 48%) 0%, hsl(224 76% 58%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(45 100% 51%) 0%, hsl(45 80% 65%) 100%);
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(213 57% 11%) 0%,
+      hsl(213 40% 20%) 100%
+    );
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(224 76% 48%) 0%,
+      hsl(224 76% 58%) 100%
+    );
+    --gradient-gold: linear-gradient(
+      135deg,
+      hsl(45 100% 51%) 0%,
+      hsl(45 80% 65%) 100%
+    );
     --shadow-glow: 0 0 40px hsl(224 76% 48% / 0.3);
     --shadow-card: 0 4px 24px hsl(213 57% 11% / 0.08);
     --shadow-card-hover: 0 8px 40px hsl(213 57% 11% / 0.12);
+
+    /* Azul Forte (para a Logo) */
+    --primary: 222 100% 45%;
+
+    /* Azul Turquesa (para o "Match") */
+    --turquoise: 185 100% 45%;
+
+    /* O Dourado já existe como --gold, mas vamos garantir que esteja vibrante */
+    --gold: 45 100% 51%;
   }
 
   .dark {
@@ -106,7 +127,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 }
 
