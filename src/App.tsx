@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ManageTournament from "./pages/ManageTournament";
 
 // Importações das páginas
 import Index from "./pages/Index";
@@ -36,6 +37,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manage/:id"
+            element={
+              <ProtectedRoute>
+                <ManageTournament />
               </ProtectedRoute>
             }
           />

@@ -80,9 +80,22 @@ const CreateTournament = () => {
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="MatchUp" width={28} height={28} />
-            <span className="text-lg font-extrabold tracking-tight text-foreground">
-              Match<span className="text-gradient-primary">Up</span>
+            <div
+              className="w-7 h-7 bg-[#0000FF]"
+              style={{
+                WebkitMaskImage: `url(${logo})`,
+                WebkitMaskSize: "contain",
+                WebkitMaskRepeat: "no-repeat",
+                WebkitMaskPosition: "center",
+                maskImage: `url(${logo})`,
+                maskSize: "contain",
+                maskRepeat: "no-repeat",
+                maskPosition: "center",
+              }}
+            />
+            <span className="text-lg font-extrabold tracking-tight">
+              <span className="text-[#00CED1]">Match</span>
+              <span className="text-[#FFD700]">Up</span>
             </span>
           </Link>
         </div>
