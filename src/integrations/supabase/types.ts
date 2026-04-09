@@ -44,6 +44,32 @@ export type Database = {
           user_id?: string;
         };
       };
+      participants: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          user_id: string;
+          category: string;
+          status: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tournament_id: string;
+          user_id: string;
+          category: string;
+          status?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tournament_id?: string;
+          user_id?: string;
+          category?: string;
+          status?: string | null;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

@@ -142,9 +142,11 @@ const BrowseTournaments = () => {
                   </div>
                 </div>
                 <div className="px-6 py-4 border-t border-border mt-auto">
-                  <Button className="w-full bg-[#0000FF] hover:bg-[#0000FF]/90 text-white">
-                    Ver Detalhes
-                  </Button>
+                  <Link to={`/tournament/${tournament.id}`}>
+                    <Button className="w-full bg-[#0000FF] hover:bg-[#0000FF]/90 text-white">
+                      Ver Detalhes
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}
