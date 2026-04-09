@@ -27,7 +27,7 @@ const CreateTournament = () => {
   const [name, setName] = useState("");
   const [sport, setSport] = useState("");
   const [date, setDate] = useState("");
-  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState("");
   const [price, setPrice] = useState("");
 
   // 2. Criamos a função que envia os dados para o banco
@@ -48,7 +48,7 @@ const CreateTournament = () => {
           name: name,
           sport: sport,
           date: date,
-          categories: category,
+          categories: categories,
           price: Number(price) || 0,
           user_id: user.id,
         },
@@ -186,18 +186,18 @@ const CreateTournament = () => {
 
               <div className="space-y-2">
                 <Label>Categoria *</Label>
-                <Select onValueChange={setCategory} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Iniciante">Iniciante</SelectItem>
-                    <SelectItem value="C">Classe C</SelectItem>
-                    <SelectItem value="B">Classe B</SelectItem>
-                    <SelectItem value="A">Classe A</SelectItem>
-                    <SelectItem value="PRO">PRO</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="categories">
+                    Categorias (separadas por vírgula) *
+                  </Label>
+                  <Input
+                    id="categories"
+                    placeholder="Ex: Iniciante, C, B, A, PRO"
+                    value={categories}
+                    onChange={(e) => setCategories(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Trophy, Calendar, Users } from "lucide-react";
+import { Plus, Trophy, Calendar, Users, User } from "lucide-react";
 import Footer from "@/components/layout/Footer";
 import logo from "@/assets/matchup-logo.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,13 +74,25 @@ const Dashboard = () => {
             </span>
           </Link>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => supabase.auth.signOut()}
-          >
-            Sair
-          </Button>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link to="/profile">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <User size={18} className="mr-2 hidden sm:inline-block" />
+                Meu Perfil
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => supabase.auth.signOut()}
+            >
+              Sair
+            </Button>
+          </div>
         </div>
       </header>
 
