@@ -25,8 +25,9 @@ const CreateTournament = () => {
 
   // 1. Criamos os 'States' para guardar o que o usuário digita
   const [name, setName] = useState("");
-  const [sport, setSport] = useState("");
   const [date, setDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sport, setSport] = useState("");
   const [categories, setCategories] = useState("");
   const [price, setPrice] = useState("");
 
@@ -46,8 +47,9 @@ const CreateTournament = () => {
       const { error } = await (supabase as any).from("tournaments").insert([
         {
           name: name,
+          date,
+          end_date: endDate,
           sport: sport,
-          date: date,
           categories: categories,
           price: Number(price) || 0,
           user_id: user.id,
@@ -176,10 +178,20 @@ const CreateTournament = () => {
               <div className="space-y-2">
                 <Label htmlFor="start-date">Data de Início *</Label>
                 <Input
-                  id="start-date"
+                  id="date"
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">Data de Término *</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
                   required
                 />
               </div>
