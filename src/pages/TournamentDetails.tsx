@@ -9,6 +9,7 @@ import {
   CheckCircle,
   FileText,
   User,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +29,11 @@ interface Tournament {
   id: string;
   name: string;
   date: string;
+  end_date?: string;
   sport: string;
   categories: string;
   price: number;
+  rules?: string;
 }
 
 // Molde completo do participante trazendo o nome do perfil
@@ -248,31 +251,33 @@ const TournamentDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* COLUNA ESQUERDA: INFORMAÇÕES (Estilo LetzPlay) */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Bloco 1: Infos Básicas */}
+            {/* Bloco 1: Infos Básicas - ATUALIZADO COM DATA DE FIM */}
             <div className="bg-card p-6 rounded-xl border border-border">
               <h3 className="text-lg font-bold mb-4 border-b border-border pb-2 flex items-center gap-2">
                 <FileText size={20} className="text-[#0000FF]" /> Informações
                 Gerais
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* AQUI ESTÁ A MUDANÇA: PERÍODO DO TORNEIO */}
                 <div className="flex items-start gap-3">
                   <Calendar className="text-muted-foreground mt-1" size={20} />
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      Início do Torneio
+                      Período do Torneio
                     </p>
                     <p className="font-bold text-foreground">
                       {new Date(tournament.date).toLocaleDateString("pt-BR")}
+                      {tournament.end_date &&
+                        ` até ${new Date(tournament.end_date).toLocaleDateString("pt-BR")}`}
                     </p>
                   </div>
                 </div>
+
                 <div className="flex items-start gap-3">
                   <MapPin className="text-muted-foreground mt-1" size={20} />
                   <div>
-                    <p className="text-sm text-muted-foreground">Endereço</p>
-                    <p className="font-bold text-foreground">
-                      Ainda não definido
-                    </p>
+                    <p className="text-sm text-muted-foreground">Local</p>
+                    <p className="font-bold text-foreground">A definir</p>
                   </div>
                 </div>
               </div>
@@ -348,6 +353,17 @@ const TournamentDetails = () => {
                   ))}
                 </div>
               )}
+            </div>
+            {/* Bloco 4: Regulamento do Torneio */}
+            <div className="bg-card p-6 rounded-xl border border-border mt-8">
+              <h3 className="text-lg font-bold mb-4 border-b border-border pb-2 flex items-center gap-2">
+                <BookOpen size={20} className="text-[#FF8C00]" /> Regulamento
+                Oficial
+              </h3>
+              <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {tournament.rules ||
+                  "O organizador ainda não definiu as regras deste torneio."}
+              </div>
             </div>
           </div>
 

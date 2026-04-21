@@ -18,9 +18,11 @@ interface Tournament {
   id: string;
   name: string;
   date: string;
+  end_date?: string;
   sport: string;
   categories: string;
   price: number;
+  rules?: string;
 }
 
 interface Participant {
@@ -47,7 +49,9 @@ const ManageTournament = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDate, setEditDate] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editRules, setEditRules] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -70,7 +74,9 @@ const ManageTournament = () => {
           setTournament(data);
           setEditName(data.name);
           setEditDate(data.date);
+          setEditEndDate(data.end_date || "");
           setEditPrice(data.price.toString());
+          setEditRules(data.rules || "");
         }
 
         const { data: participantsData, error: participantsError } =
@@ -111,7 +117,9 @@ const ManageTournament = () => {
         .update({
           name: editName,
           date: editDate,
+          end_date: editEndDate,
           price: Number(editPrice),
+          rules: editRules,
         })
         .eq("id", id);
 
@@ -310,22 +318,43 @@ const ManageTournament = () => {
             </p>
           </div>
 
-          <div>
-            <p className="text-xs text-muted-foreground uppercase font-bold">
-              Data de Início
-            </p>
-            {isEditing ? (
-              <Input
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-                className="mt-1"
-              />
-            ) : (
-              <p className="font-medium">
-                {new Date(tournament.date).toLocaleDateString("pt-BR")}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase font-bold">
+                Início
               </p>
-            )}
+              {isEditing ? (
+                <Input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="mt-1"
+                />
+              ) : (
+                <p className="font-medium">
+                  {new Date(tournament.date).toLocaleDateString("pt-BR")}
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase font-bold">
+                Término
+              </p>
+              {isEditing ? (
+                <Input
+                  type="date"
+                  value={editEndDate}
+                  onChange={(e) => setEditEndDate(e.target.value)}
+                  className="mt-1"
+                />
+              ) : (
+                <p className="font-medium">
+                  {tournament.end_date
+                    ? new Date(tournament.end_date).toLocaleDateString("pt-BR")
+                    : "Não definido"}
+                </p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -343,6 +372,24 @@ const ManageTournament = () => {
               <p className="font-medium text-[#FFD700]">
                 R$ {tournament.price}
               </p>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-border mt-4">
+            <p className="text-xs text-muted-foreground uppercase font-bold mb-2">
+              Regulamento
+            </p>
+            {isEditing ? (
+              <textarea
+                value={editRules}
+                onChange={(e) => setEditRules(e.target.value)}
+                className="w-full min-h-[150px] p-3 rounded-md border border-input bg-transparent text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0000FF]"
+                placeholder="Digite as regras do torneio, critérios de desempate, WO..."
+              />
+            ) : (
+              <div className="text-sm text-foreground whitespace-pre-wrap">
+                {tournament.rules || "Nenhum regulamento definido."}
+              </div>
             )}
           </div>
         </div>

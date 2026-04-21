@@ -53,11 +53,11 @@ const Navbar = () => {
         </div>
 
         {/* BOTÕES DA DIREITA */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {user ? (
             <Link to="/dashboard">
-              <Button className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white font-bold">
-                <UserIcon size={16} className="mr-2" /> Meu Painel
+              <Button className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white font-bold rounded-full px-6">
+                <UserIcon size={18} className="mr-2" /> Meu Painel
               </Button>
             </Link>
           ) : (
@@ -71,7 +71,7 @@ const Navbar = () => {
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white font-bold">
+                <Button className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white font-bold rounded-full px-6">
                   Criar Torneio
                 </Button>
               </Link>
