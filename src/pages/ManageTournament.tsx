@@ -71,11 +71,31 @@ const ManageTournament = () => {
         const data = tourneyData as unknown as Tournament;
 
         if (data) {
-          setTournament(data);
+          setTournament(data as unknown as Tournament);
           setEditName(data.name);
-          setEditDate(data.date);
-          setEditEndDate(data.end_date || "");
-          setEditPrice(data.price.toString());
+
+          // Função que "força" a data para o padrão rigoroso do HTML (AAAA-MM-DD)
+          const forceValidDate = (dateString?: string | null) => {
+            if (!dateString) return "";
+            try {
+              // Se já vier no formato exato (ex: 2026-04-18), a gente só recorta e manda
+              if (dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+                return dateString.substring(0, 10);
+              }
+              // Se vier diferente, o Javascript converte e a gente formata
+              const parsedDate = new Date(dateString);
+              if (isNaN(parsedDate.getTime())) return ""; // Se for inválida, devolve vazio para não travar
+              return parsedDate.toISOString().split("T")[0];
+            } catch (error) {
+              return "";
+            }
+          };
+
+          // Agora usamos a função para blindar as datas
+          setEditDate(forceValidDate(data.date));
+          setEditEndDate(forceValidDate(data.end_date));
+
+          setEditPrice(data.price?.toString() || "");
           setEditRules(data.rules || "");
         }
 
@@ -109,44 +129,48 @@ const ManageTournament = () => {
   }, [id]);
 
   const handleUpdate = async () => {
-    setIsSaving(true);
     try {
+      // O SEGREDO: Se a data estiver vazia, mandamos null em vez de string vazia ("")
+      const formattedEndDate = editEndDate === "" ? null : editEndDate;
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("tournaments")
         .update({
           name: editName,
           date: editDate,
-          end_date: editEndDate,
+          end_date: formattedEndDate, // <-- Usando a variável tratada
           price: Number(editPrice),
           rules: editRules,
         })
-        .eq("id", id);
+        .eq("id", id)
+        .select()
+        .single();
 
       if (error) throw error;
 
-      if (tournament) {
-        setTournament({
-          ...tournament,
-          name: editName,
-          date: editDate,
-          price: Number(editPrice),
+      if (data) {
+        setTournament(data as unknown as Tournament);
+        setIsEditing(false);
+        toast({
+          title: "Sucesso!",
+          description: "Torneio atualizado com sucesso.",
         });
       }
-      setIsEditing(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Erro completo ao salvar:", error);
+      // Pega a mensagem real do Supabase
+      const errorMessage =
+        error?.message ||
+        error?.details ||
+        "Erro desconhecido. Aperte F12 e olhe o Console.";
 
-      toast({
-        title: "Torneio Atualizado!",
-        description: "As informações foram salvas com sucesso.",
-      });
-    } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro ao atualizar",
-        description: "Verifique os dados e tente novamente.",
+        description: errorMessage,
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -202,16 +226,17 @@ const ManageTournament = () => {
         <ArrowLeft size={16} /> Voltar ao Dashboard
       </Link>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div className="flex-1 w-full">
+      {/* Substitua a área do Título e Botões por isto: */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-6">
+        <div className="w-full max-w-md">
           {isEditing ? (
             <Input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="text-2xl font-bold h-12 w-full md:max-w-md border-[#0000FF]"
+              className="text-lg font-bold w-full border-[#0000FF] focus-visible:ring-[#0000FF]"
             />
           ) : (
-            <h1 className="text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground">
               {tournament.name}
             </h1>
           )}
@@ -220,39 +245,26 @@ const ManageTournament = () => {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
           {isEditing ? (
             <>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditing(false)}
-                disabled={isSaving}
-              >
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
                 <X size={16} className="mr-2" /> Cancelar
               </Button>
               <Button
-                className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
                 onClick={handleUpdate}
-                disabled={isSaving}
+                className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
               >
-                <Save size={16} className="mr-2" />{" "}
-                {isSaving ? "Salvando..." : "Salvar"}
+                <Save size={16} className="mr-2" /> Salvar
               </Button>
             </>
           ) : (
-            <>
-              <Button variant="outline" onClick={() => setIsEditing(true)}>
-                <Settings size={16} className="mr-2" /> Editar Infos
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                <Trash2 size={16} className="mr-2" />{" "}
-                {isDeleting ? "Excluindo..." : "Excluir"}
-              </Button>
-            </>
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
+            >
+              Editar Infos
+            </Button>
           )}
         </div>
       </div>
@@ -304,6 +316,7 @@ const ManageTournament = () => {
           )}
         </div>
 
+        {/* INÍCIO DO BLOCO RESUMO */}
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm space-y-4 h-fit">
           <h3 className="font-bold text-lg border-b border-border pb-2">
             Resumo
@@ -318,17 +331,17 @@ const ManageTournament = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          <div className="flex flex-col gap-4">
+            <div className="w-full">
               <p className="text-xs text-muted-foreground uppercase font-bold">
                 Início
               </p>
               {isEditing ? (
-                <Input
+                <input
                   type="date"
-                  value={editDate}
+                  value={editDate || ""}
                   onChange={(e) => setEditDate(e.target.value)}
-                  className="mt-1"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0000FF]"
                 />
               ) : (
                 <p className="font-medium">
@@ -336,16 +349,17 @@ const ManageTournament = () => {
                 </p>
               )}
             </div>
-            <div>
+
+            <div className="w-full">
               <p className="text-xs text-muted-foreground uppercase font-bold">
                 Término
               </p>
               {isEditing ? (
-                <Input
+                <input
                   type="date"
-                  value={editEndDate}
+                  value={editEndDate || ""}
                   onChange={(e) => setEditEndDate(e.target.value)}
-                  className="mt-1"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0000FF]"
                 />
               ) : (
                 <p className="font-medium">
@@ -393,6 +407,7 @@ const ManageTournament = () => {
             )}
           </div>
         </div>
+        {/* FIM DO BLOCO RESUMO */}
       </div>
     </div>
   );
