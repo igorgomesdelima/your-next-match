@@ -10,6 +10,8 @@ import {
   FileText,
   User,
   BookOpen,
+  QrCode,
+  Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +60,52 @@ const TournamentDetails = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [isRegistering, setIsRegistering] = useState(false);
+  // Estados para o PIX
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+  const [pixCopied, setPixCopied] = useState(false);
+  const [isConfirmingPix, setIsConfirmingPix] = useState(false);
+
+  // Simula a cópia do código
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(
+      "00020126580014br.gov.bcb.pix0136MATCHUP123456...FALSO...",
+    );
+    setPixCopied(true);
+    setTimeout(() => setPixCopied(false), 2000);
+  };
+
+  // Função que avisa o organizador (muda o status)
+  // Função que avisa o organizador (muda o status)
+  const handleConfirmPayment = async () => {
+    setIsConfirmingPix(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from("participants")
+        .update({ status: "Em Análise" })
+        .eq("tournament_id", id)
+        .eq("user_id", currentUser?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Comprovante enviado!",
+        description: "O organizador irá analisar seu pagamento em breve.",
+      });
+      setIsPixModalOpen(false);
+      window.location.reload(); // Atualiza para o botão mudar na hora
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message,
+      });
+    } finally {
+      setIsConfirmingPix(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -96,6 +144,8 @@ const TournamentDetails = () => {
 
     if (id) fetchDetails();
   }, [id]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleRegister = async () => {
     if (!selectedCategory) {
@@ -138,8 +188,16 @@ const TournamentDetails = () => {
         description: `Vaga garantida na categoria ${selectedCategory}.`,
       });
 
-      // Recarrega a página para atualizar a lista de inscritos
-      window.location.reload();
+      toast({
+        title: "Comprovante enviado!",
+        description: "O organizador irá analisar seu pagamento em breve.",
+      });
+      setIsPixModalOpen(false);
+
+      // O SEGREDO: Dá 1 segundo e meio para o usuário ler a mensagem antes de piscar a tela
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro ao realizar inscrição.";
@@ -406,7 +464,10 @@ const TournamentDetails = () => {
                       Efetue o pagamento até o prazo limite para confirmar seu
                       nome no sorteio das chaves.
                     </p>
-                    <Button className="w-full bg-[#00CED1] hover:bg-[#00CED1]/90 text-white font-bold shadow-sm">
+                    <Button
+                      className="w-full bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
+                      onClick={() => setIsPixModalOpen(true)}
+                    >
                       Efetuar Pagamento
                     </Button>
                   </div>
@@ -444,6 +505,114 @@ const TournamentDetails = () => {
               )}
             </div>
           </div>
+          {/* MODAL DE INSCRIÇÃO */}
+          {isModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-card w-full max-w-md rounded-2xl p-6 shadow-2xl border border-border animate-in fade-in zoom-in duration-200">
+                <h2 className="text-2xl font-bold mb-2">Confirmar Inscrição</h2>
+                <p className="text-muted-foreground mb-6">
+                  Escolha sua categoria para participar do {tournament?.name}.
+                </p>
+
+                <div className="space-y-4 mb-8">
+                  <label className="text-sm font-bold uppercase text-muted-foreground">
+                    Categoria
+                  </label>
+                  <select
+                    className="w-full p-3 rounded-lg border border-input bg-background focus:ring-2 focus:ring-[#0000FF] outline-none"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                  >
+                    <option value="">Selecione uma categoria...</option>
+                    {/* Aqui nós separamos a string "A, B, C" do banco em opções */}
+                    {tournament?.categories.split(",").map((cat) => (
+                      <option key={cat.trim()} value={cat.trim()}>
+                        {cat.trim()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-3 justify-end">
+                  <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
+                    onClick={handleRegister}
+                    disabled={isRegistering}
+                  >
+                    {isRegistering ? "Processando..." : "Confirmar Vaga"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL DO PIX */}
+          {isPixModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-card w-full max-w-md rounded-2xl p-6 shadow-2xl border border-border flex flex-col items-center animate-in fade-in zoom-in duration-200">
+                <h2 className="text-2xl font-bold mb-2 text-center">
+                  Pagamento da Inscrição
+                </h2>
+                <p className="text-muted-foreground mb-6 text-center text-sm">
+                  Escaneie o QR Code abaixo com o app do seu banco para pagar o
+                  valor de{" "}
+                  <strong className="text-[#0000FF]">
+                    R$ {tournament?.price}
+                  </strong>
+                  .
+                </p>
+
+                {/* Imagem do QR Code falso */}
+                <div className="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-sm">
+                  <QrCode size={180} className="text-black" />
+                </div>
+
+                <div className="w-full space-y-2 mb-8">
+                  <label className="text-xs font-bold uppercase text-muted-foreground">
+                    Código PIX Copia e Cola
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      readOnly
+                      value="00020126580014br.gov.bcb.pix0136..."
+                      className="flex-1 h-10 rounded-md border border-input bg-muted px-3 text-xs font-mono outline-none"
+                    />
+                    <Button
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={handleCopyPix}
+                    >
+                      {pixCopied ? (
+                        <CheckCircle size={18} className="text-green-500" />
+                      ) : (
+                        <Copy size={18} />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex w-full gap-3">
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setIsPixModalOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="w-full bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
+                    onClick={handleConfirmPayment}
+                    disabled={isConfirmingPix}
+                  >
+                    {isConfirmingPix ? "Confirmando..." : "Já realizei o PIX"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

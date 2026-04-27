@@ -1,351 +1,212 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Plus, Trophy, Calendar, Users, User, Medal } from "lucide-react";
-import Footer from "@/components/layout/Footer";
-import logo from "@/assets/matchup-logo.png";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/landing/Navbar";
+import { Button } from "@/components/ui/button";
+import {
+  Calendar,
+  Tag,
+  CheckCircle,
+  Clock,
+  Trophy,
+  MapPin,
+  ArrowRight,
+} from "lucide-react";
 
-// Nossos moldes (Interfaces)
-interface Tournament {
-  id: string;
-  name: string;
-  date: string;
-  sport: string;
-  categories: string;
-  price: number;
-}
-
-// Interface da Inscrição que traz os dados do torneio junto (JOIN)
-interface Participation {
+// Como fizemos um JOIN, a tipagem reflete as duas tabelas juntas
+interface UserRegistration {
   id: string;
   category: string;
   status: string;
-  tournaments: Tournament; // Os dados do torneio vêm aninhados aqui!
+  tournaments: {
+    id: string;
+    name: string;
+    date: string;
+    sport: string;
+  };
 }
 
 const Dashboard = () => {
-  // Estados para guardar as duas listas
-  const [organizedTournaments, setOrganizedTournaments] = useState<
-    Tournament[]
-  >([]);
-  const [participations, setParticipations] = useState<Participation[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Controle de Abas (Qual visão o usuário está vendo agora?)
-  const [activeTab, setActiveTab] = useState<"playing" | "organizing">(
-    "playing",
-  );
+  const [registrations, setRegistrations] = useState<UserRegistration[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState<string>("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchUserDataAndRegistrations = async () => {
       try {
+        // 1. Pega quem é o usuário logado
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) return;
 
-        // 1. Busca os torneios que o usuário ORGANIZA
-        const { data: orgData, error: orgError } = await supabase
-          .from("tournaments")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+        if (!user) {
+          navigate("/auth"); // Se não estiver logado, chuta para a tela de login
+          return;
+        }
 
-        if (orgError) throw orgError;
-        if (orgData) setOrganizedTournaments(orgData as Tournament[]);
+        // Busca o nome do perfil (opcional, só para deixar amigável)
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
 
-        // 2. Busca os torneios em que o usuário VAI JOGAR (JOIN)
-        const { data: partData, error: partError } = await supabase
+        // Tipamos exatamente o que esperamos do banco, deixando o ESLint e o TypeScript felizes
+        const userProfile = profile as { full_name: string | null } | null;
+
+        // O ponto de interrogação (?.) já faz a verificação de segurança (Optional Chaining)
+        if (userProfile?.full_name) {
+          setUserName(userProfile.full_name.split(" ")[0]);
+        }
+
+        // 2. A Mágica do JOIN: Busca as inscrições e já puxa os dados do torneio junto
+        const { data, error } = await supabase
           .from("participants")
           .select(
             `
             id,
             category,
             status,
-            tournaments (*) 
+            tournaments (
+              id,
+              name,
+              date,
+              sport
+            )
           `,
           )
-          .eq("user_id", user.id); // Filtra pelas inscrições do usuário logado
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
 
-        if (partError) throw partError;
+        if (error) throw error;
 
-        // Remove inscrições cujo torneio foi deletado (órfãos) e salva no state
-        if (partData) {
-          const validParticipations = (
-            partData as unknown as Participation[]
-          ).filter((p) => p.tournaments !== null);
-          setParticipations(validParticipations);
+        if (data) {
+          // Precisamos forçar a tipagem porque o TypeScript do Supabase para JOINs é meio chato
+          setRegistrations(data as unknown as UserRegistration[]);
         }
       } catch (error) {
-        console.error("Erro ao buscar dados do dashboard:", error);
+        console.error("Erro ao buscar inscrições:", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchDashboardData();
-  }, []);
+    fetchUserDataAndRegistrations();
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 bg-[#0000FF]"
-              style={{
-                WebkitMaskImage: `url(${logo})`,
-                WebkitMaskSize: "contain",
-                WebkitMaskRepeat: "no-repeat",
-                WebkitMaskPosition: "center",
-                maskImage: `url(${logo})`,
-                maskSize: "contain",
-                maskRepeat: "no-repeat",
-                maskPosition: "center",
-              }}
-            />
-            <span className="text-lg font-extrabold tracking-tight">
-              <span className="text-[#00CED1]">Match</span>
-              <span className="text-[#FFD700]">Up</span>
-            </span>
-          </Link>
+    <div className="min-h-screen bg-background">
+      <Navbar />
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/profile">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <User size={18} className="mr-2 hidden sm:inline-block" />
-                Meu Perfil
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => supabase.auth.signOut()}
-            >
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {/* Cabeçalho e Sistema de Abas */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">
-              Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie seus jogos e competições.
-            </p>
-          </div>
-
-          {/* Botões de Troca de Aba */}
-          <div className="flex bg-secondary p-1 rounded-lg w-full md:w-auto">
-            <button
-              onClick={() => setActiveTab("playing")}
-              className={`flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all ${activeTab === "playing" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Minhas Inscrições
-            </button>
-            <button
-              onClick={() => setActiveTab("organizing")}
-              className={`flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all ${activeTab === "organizing" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Meus Torneios
-            </button>
-          </div>
+      <main className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold mb-2">
+            Olá{userName ? `, ${userName}` : ""}!
+          </h1>
+          <p className="text-muted-foreground">
+            Acompanhe seus próximos desafios e gerencie suas inscrições.
+          </p>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Carregando informações...
-          </div>
-        ) : (
-          <>
-            {/* ================= ABA: MINHAS INSCRIÇÕES (JOGADOR) ================= */}
-            {activeTab === "playing" && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold flex items-center">
-                    <Medal className="mr-2 text-[#FFD700]" /> Próximos Jogos
-                  </h2>
-                  <Link to="/browse">
-                    <Button variant="outline" size="sm">
-                      Explorar mais
-                    </Button>
-                  </Link>
-                </div>
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold flex items-center gap-2 border-b border-border pb-2">
+            <Trophy className="text-[#0000FF]" size={24} /> Minhas Inscrições
+          </h2>
 
-                {participations.length === 0 ? (
-                  <div className="text-center py-16 bg-card rounded-xl border border-dashed border-border">
-                    <Trophy className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-bold">
-                      Nenhuma inscrição encontrada
-                    </h3>
-                    <p className="text-muted-foreground mb-6">
-                      Você ainda não se inscreveu em nenhum torneio.
-                    </p>
-                    <Link to="/browse">
-                      <Button className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white">
-                        Procurar Torneios
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {participations.map((part) => (
-                      <div
-                        key={part.id}
-                        className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-card transition-all"
-                      >
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <span className="px-3 py-1 bg-[#0000FF]/10 text-[#0000FF] rounded-full text-xs font-bold uppercase tracking-wider">
-                              {part.tournaments.sport.replace("-", " ")}
-                            </span>
-                            <span className="text-xs font-bold bg-green-500/10 text-green-500 px-3 py-1 rounded-full">
-                              Inscrito
-                            </span>
-                          </div>
-                          <h3 className="text-xl font-bold mb-2 line-clamp-2">
-                            {part.tournaments.name}
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0000FF]"></div>
+            </div>
+          ) : registrations.length === 0 ? (
+            <div className="text-center py-16 bg-card rounded-xl border border-border shadow-sm">
+              <Trophy
+                size={48}
+                className="mx-auto text-muted-foreground mb-4 opacity-30"
+              />
+              <h3 className="text-xl font-bold mb-2">
+                Você ainda não está inscrito em nada
+              </h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                Descubra torneios incríveis acontecendo perto de você e coloque
+                seu jogo à prova.
+              </p>
+              <Link to="/browse">
+                <Button className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white rounded-full px-8">
+                  Encontrar Torneios
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {registrations.map((reg) => (
+                <Link
+                  to={`/tournament/${reg.tournaments.id}`}
+                  key={reg.id}
+                  className="group"
+                >
+                  <div className="bg-card p-5 rounded-xl border border-border hover:border-[#0000FF]/50 transition-colors shadow-sm flex flex-col sm:flex-row gap-5">
+                    {/* Data/Calendário Visual */}
+                    <div className="bg-muted rounded-lg p-3 flex flex-col items-center justify-center min-w-[80px] text-center border border-border group-hover:bg-[#0000FF]/5 transition-colors">
+                      <span className="text-xs font-bold text-muted-foreground uppercase mb-1">
+                        {new Date(reg.tournaments.date)
+                          .toLocaleDateString("pt-BR", { month: "short" })
+                          .replace(".", "")}
+                      </span>
+                      <span className="text-2xl font-black text-foreground">
+                        {new Date(reg.tournaments.date).getDate()}
+                      </span>
+                    </div>
+
+                    {/* Detalhes da Inscrição */}
+                    <div className="flex-1 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-xs font-bold text-[#0000FF] uppercase mb-1">
+                            {reg.tournaments.sport.replace("-", " ")}
+                          </p>
+                          <h3 className="font-bold text-lg leading-tight group-hover:text-[#0000FF] transition-colors line-clamp-1">
+                            {reg.tournaments.name}
                           </h3>
-                          <div className="space-y-2 mt-4">
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Calendar
-                                size={16}
-                                className="mr-2 text-[#00CED1]"
-                              />
-                              {new Date(
-                                part.tournaments.date,
-                              ).toLocaleDateString("pt-BR")}
-                            </div>
-                            <div className="flex items-center text-sm font-bold">
-                              <Users
-                                size={16}
-                                className="mr-2 text-[#FFD700]"
-                              />
-                              Sua Categoria:{" "}
-                              <span className="ml-1 text-[#FFD700]">
-                                {part.category}
-                              </span>
-                            </div>
-                          </div>
                         </div>
-                        <div className="px-6 py-3 bg-secondary/30 border-t border-border flex justify-between items-center">
-                          <Link
-                            to={`/tournament/${part.tournaments.id}`}
-                            className="w-full"
-                          >
-                            <Button
-                              variant="ghost"
-                              className="w-full text-[#0000FF] hover:bg-[#0000FF]/10 font-bold"
-                            >
-                              Página do Torneio
-                            </Button>
-                          </Link>
-                        </div>
+                        <ArrowRight
+                          size={18}
+                          className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1"
+                        />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
 
-            {/* ================= ABA: MEUS TORNEIOS (ORGANIZADOR) ================= */}
-            {activeTab === "organizing" && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold flex items-center">
-                    <Users className="mr-2 text-[#0000FF]" /> Torneios que
-                    Organizo
-                  </h2>
-                  <Link to="/create">
-                    <Button className="bg-[#0000FF] hover:bg-[#0000FF]/90 text-white shadow-sm">
-                      <Plus size={16} className="mr-2" /> Novo Torneio
-                    </Button>
-                  </Link>
-                </div>
-
-                {organizedTournaments.length === 0 ? (
-                  <div className="text-center py-16 bg-card rounded-xl border border-dashed border-border">
-                    <Trophy className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-bold">Nenhum torneio criado</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Você ainda não organizou nenhuma competição.
-                    </p>
-                    <Link to="/create">
-                      <Button variant="outline">Começar agora</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {organizedTournaments.map((tournament) => (
-                      /* Card padronizado com fundo branco e sem barras cinzas */
-                      <div
-                        key={tournament.id}
-                        className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-card transition-all"
-                      >
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <span className="px-3 py-1 bg-[#0000FF]/10 text-[#0000FF] rounded-full text-xs font-bold uppercase tracking-wider">
-                              {tournament.sport.replace("-", " ")}
-                            </span>
-                            {/* Mostramos o preço no canto superior direito para combinar com outros cards */}
-                            <span className="text-xs font-bold bg-[#FFD700]/10 text-[#FFD700] px-3 py-1 rounded-full">
-                              R$ {tournament.price}
-                            </span>
-                          </div>
-
-                          <h3 className="text-xl font-bold mb-2 text-foreground line-clamp-2">
-                            {tournament.name}
-                          </h3>
-
-                          <div className="space-y-2 mt-4">
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Calendar
-                                size={16}
-                                className="mr-2 text-[#00CED1]"
-                              />
-                              {new Date(tournament.date).toLocaleDateString(
-                                "pt-BR",
-                              )}
-                            </div>
-                            <div className="flex items-center text-sm font-bold text-muted-foreground">
-                              <Users
-                                size={16}
-                                className="mr-2 text-[#FFD700]"
-                              />
-                              Categorias: {tournament.categories}
-                            </div>
-                          </div>
+                      <div className="flex flex-wrap gap-3 pt-2">
+                        <div className="flex items-center text-sm text-muted-foreground bg-secondary px-2 py-1 rounded-md">
+                          <Tag size={14} className="mr-1.5" />
+                          Cat:{" "}
+                          <strong className="ml-1 text-foreground">
+                            {reg.category || "Não definida"}
+                          </strong>
                         </div>
 
-                        {/* Rodapé limpo com botão sólido azul para gerenciar */}
-                        <div className="px-6 py-4 border-t border-border mt-auto">
-                          <Link to={`/manage/${tournament.id}`}>
-                            <Button className="w-full bg-[#0000FF] hover:bg-[#0000FF]/90 text-white font-bold transition-colors">
-                              Gerenciar Torneio
-                            </Button>
-                          </Link>
-                        </div>
+                        {/* Badge de Status Dinâmico */}
+                        {reg.status?.toLowerCase() === "confirmado" ? (
+                          <div className="flex items-center text-sm text-green-600 bg-green-500/10 px-2 py-1 rounded-md">
+                            <CheckCircle size={14} className="mr-1.5" />
+                            <strong className="capitalize">{reg.status}</strong>
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-sm text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md">
+                            <Clock size={14} className="mr-1.5" />
+                            <strong className="capitalize">
+                              {reg.status || "Pendente"}
+                            </strong>
+                          </div>
+                        )}
                       </div>
-                    ))}
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
