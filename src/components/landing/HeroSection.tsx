@@ -9,7 +9,7 @@ const HeroSection = () => {
       <div className="absolute inset-0">
         <img
           src={heroBg}
-          alt=""
+          alt="Imagem de fundo de esportes"
           className="w-full h-full object-cover brightness-50 hue-rotate-[180deg] saturate-150"
           width={1920}
           height={1080}
@@ -19,17 +19,17 @@ const HeroSection = () => {
 
       <div className="relative z-10 container mx-auto px-4 text-center py-32">
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-secondary-foreground leading-tight mb-6 animate-fade-in">
-          Your game.
+          Seu jogo.
           <br />
-          <span className="text-gradient-primary">Your tournament.</span>
+          <span className="text-gradient-primary">Seu torneio.</span>
         </h1>
 
         <p
           className="text-lg md:text-xl text-secondary-foreground/70 max-w-2xl mx-auto mb-10 animate-fade-in"
           style={{ animationDelay: "0.15s" }}
         >
-          Create, manage, and compete in sports tournaments — beautifully
-          simple, blazingly fast, and built for players.
+          Crie, gerencie e compita em torneios esportivos — incrivelmente
+          simples, rápido e feito para os jogadores.
         </p>
 
         <div
@@ -43,7 +43,7 @@ const HeroSection = () => {
               className="text-base px-8 py-6 gap-2"
             >
               <Trophy size={20} />
-              Create Tournament
+              Criar Torneio
             </Button>
           </Link>
           <Link to="/browse">
@@ -53,7 +53,7 @@ const HeroSection = () => {
               className="text-base px-8 py-6 gap-2"
             >
               <Search size={20} />
-              Find a Tournament
+              Explorar Torneios
             </Button>
           </Link>
         </div>
