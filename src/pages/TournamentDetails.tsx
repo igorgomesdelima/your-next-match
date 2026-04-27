@@ -7,6 +7,7 @@ import {
   Trophy,
   Users,
   CheckCircle,
+  Clock,
   FileText,
   User,
   BookOpen,
@@ -43,6 +44,7 @@ interface Participant {
   id: string;
   user_id: string;
   category: string;
+  status: string;
   profiles: {
     full_name: string | null;
   } | null;
@@ -64,6 +66,9 @@ const TournamentDetails = () => {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const [pixCopied, setPixCopied] = useState(false);
   const [isConfirmingPix, setIsConfirmingPix] = useState(false);
+  const myRegistration = participants.find(
+    (p) => p.user_id === currentUser?.id,
+  );
 
   // Simula a cópia do código
   const handleCopyPix = () => {
@@ -454,23 +459,50 @@ const TournamentDetails = () => {
                     </p>
                   </div>
 
-                  {/* Bloco de Pagamento Pendente */}
-                  <div className="bg-gray-800 border border-border rounded-xl p-4 text-center">
-                    <p className="text-sm font-bold text-[#FF8C00] mb-2">
-                      Pagamento Pendente
-                    </p>
-                    {/* 👇 Agora o texto é BRANCO e visível 👇 */}
-                    <p className="text-xs text-white mb-4">
-                      Efetue o pagamento até o prazo limite para confirmar seu
-                      nome no sorteio das chaves.
-                    </p>
-                    <Button
-                      className="w-full bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
-                      onClick={() => setIsPixModalOpen(true)}
-                    >
-                      Efetuar Pagamento
-                    </Button>
-                  </div>
+                  {/* CARTÃO DE STATUS DINÂMICO */}
+                  {myRegistration?.status === "Confirmado" ? (
+                    <div className="bg-green-500/10 border border-green-200 rounded-xl p-5 text-center mt-4">
+                      <CheckCircle
+                        size={32}
+                        className="mx-auto text-green-600 mb-2"
+                      />
+                      <h3 className="font-bold text-green-700 text-lg">
+                        Inscrição Aprovada!
+                      </h3>
+                      <p className="text-green-600 text-sm mt-1">
+                        Seu pagamento foi confirmado. Prepare-se para o jogo!
+                      </p>
+                    </div>
+                  ) : myRegistration?.status === "Em Análise" ? (
+                    <div className="bg-amber-500/10 border border-amber-200 rounded-xl p-5 text-center mt-4">
+                      <Clock
+                        size={32}
+                        className="mx-auto text-amber-500 mb-2"
+                      />
+                      <h3 className="font-bold text-amber-700 text-lg">
+                        Analisando PIX...
+                      </h3>
+                      <p className="text-amber-600 text-sm mt-1">
+                        Seu comprovante foi enviado. Aguarde a liberação.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-[#1A1F2C] border border-border rounded-xl p-5 text-center mt-4">
+                      <p className="text-sm font-bold text-[#FF8C00] mb-2">
+                        Pagamento Pendente
+                      </p>
+                      <p className="text-xs text-white mb-4">
+                        Efetue o pagamento até o prazo limite para confirmar seu
+                        nome no sorteio das chaves.
+                      </p>
+                      <Button
+                        className="w-full bg-[#0000FF] hover:bg-[#0000FF]/90 text-white"
+                        onClick={() => setIsPixModalOpen(true)}
+                      >
+                        Efetuar Pagamento
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 // SE NÃO TIVER INSCRITO -> MOSTRA O FORMULÁRIO DE CATEGORIA

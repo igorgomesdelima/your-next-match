@@ -8,6 +8,7 @@ import {
   CheckCircle,
   Save,
   X,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,6 +175,34 @@ const ManageTournament = () => {
     }
   };
 
+  const handleApprovePayment = async (participantId: string) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from("participants")
+        .update({ status: "Confirmado" })
+        .eq("id", participantId);
+
+      if (error) throw error;
+
+      // FORMATO CORRETO DO TOAST
+      toast({
+        title: "Pagamento Aprovado!",
+        description: "O jogador agora está oficialmente confirmado.",
+      });
+
+      window.location.reload();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      // FORMATO CORRETO DO TOAST DE ERRO
+      toast({
+        variant: "destructive",
+        title: "Erro ao aprovar",
+        description: error.message,
+      });
+    }
+  };
+
   const handleDelete = async () => {
     const confirmDelete = window.confirm(
       "TEM CERTEZA ABSOLUTA? \n\nIsso apagará o torneio e TODAS as inscrições feitas nele. Essa ação não pode ser desfeita.",
@@ -283,35 +312,64 @@ const ManageTournament = () => {
               Ainda não há jogadores inscritos neste torneio.
             </div>
           ) : (
-            <div className="space-y-4">
-              {participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border border-border rounded-lg bg-background hover:border-[#0000FF]/50 transition-colors gap-4"
-                >
-                  <div>
-                    <p className="font-bold text-foreground">
-                      {participant.profiles?.full_name || "Jogador Anônimo"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {participant.profiles?.phone || "Sem telefone cadastrado"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground uppercase font-bold">
-                        Categoria
-                      </p>
-                      <p className="font-semibold text-[#FFD700]">
-                        {participant.category}
-                      </p>
+            <div className="bg-card p-6 rounded-xl border border-border shadow-sm h-fit">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Users size={20} className="text-[#0000FF]" /> Inscrições
+                Recebidas ({participants.length})
+              </h3>
+
+              <div className="space-y-3">
+                {participants.length === 0 ? (
+                  <p className="text-sm text-muted-foreground border border-dashed border-border rounded-lg p-8 text-center">
+                    Nenhuma inscrição recebida ainda.
+                  </p>
+                ) : (
+                  participants.map((participant) => (
+                    <div
+                      key={participant.id}
+                      className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border border-border rounded-lg bg-background gap-4 hover:border-border/80 transition-colors"
+                    >
+                      <div>
+                        <p className="font-bold text-foreground">
+                          {participant.profiles?.full_name || "Jogador Anônimo"}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs font-bold bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase">
+                            CAT: {participant.category || "N/A"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {participant.profiles?.phone || "Sem telefone"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        {participant.status === "Em Análise" ? (
+                          <>
+                            <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md flex items-center gap-1">
+                              <Clock size={14} /> Em Análise
+                            </span>
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                handleApprovePayment(participant.id)
+                              }
+                              className="bg-green-600 hover:bg-green-700 text-white h-8"
+                            >
+                              <CheckCircle size={16} className="mr-1" /> Aprovar
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-sm font-medium text-green-600 bg-green-500/10 px-3 py-1.5 rounded-md flex items-center gap-1">
+                            <CheckCircle size={16} />{" "}
+                            {participant.status || "Confirmado"}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-xs font-bold flex items-center">
-                      <CheckCircle size={14} className="mr-1" /> Confirmado
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  ))
+                )}
+              </div>
             </div>
           )}
         </div>
