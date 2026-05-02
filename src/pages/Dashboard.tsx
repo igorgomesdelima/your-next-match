@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/landing/Navbar";
 import { Button } from "@/components/ui/button";
 import {
   Calendar,
@@ -92,9 +91,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-
-      <main className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <main className="pt-4 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
         <div className="mb-10">
           <h1 className="text-3xl font-bold mb-2">
             Olá{userName ? `, ${userName}` : ""}!

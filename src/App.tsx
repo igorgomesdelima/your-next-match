@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -52,6 +53,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Não esqueça de garantir que o import do AppLayout está lá no topo do arquivo!
+// import AppLayout from "./components/layout/AppLayout";
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,48 +85,57 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Rotas Públicas */}
+        {/* ==========================================
+            1. ROTAS DA VITRINE (SEM O MENU LATERAL) 
+            ========================================== */}
         <Route path="/" element={<Index />} />
         <Route
           path="/auth"
           element={user ? <Navigate to="/dashboard" /> : <Auth />}
         />
-        <Route path="/browse" element={<BrowseTournaments />} />
-        <Route path="/tournament/:id" element={<TournamentDetails />} />
 
-        {/* Rotas Privadas (Exigem Login) */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/create"
-          element={
-            <ProtectedRoute>
-              <CreateTournament />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/manage/:id"
-          element={
-            <ProtectedRoute>
-              <ManageTournament />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+        {/* ==========================================
+            2. ROTAS DO APP (ABRAÇADAS PELO APPLAYOUT) 
+            ========================================== */}
+        <Route element={<AppLayout />}>
+          {/* A. Públicas (Qualquer um acessa, mas com cara de App) */}
+          <Route path="/browse" element={<BrowseTournaments />} />
+          <Route path="/tournament/:id" element={<TournamentDetails />} />
+
+          {/* B. Privadas (Exigem Login e estão dentro do Menu Lateral) */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute>
+                <CreateTournament />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manage/:id"
+            element={
+              <ProtectedRoute>
+                <ManageTournament />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
       </Routes>
       <Toaster />
     </Router>

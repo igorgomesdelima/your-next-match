@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, MapPin, Calendar, Trophy, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Navbar from "@/components/landing/Navbar";
 
 interface Tournament {
   id: string;
@@ -78,9 +77,7 @@ const BrowseTournaments = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-
-      <main className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <main className="pt-6 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
         {/* Cabeçalho e Barra de Busca */}
         <div className="mb-10 space-y-6">
           <div>
