@@ -28,7 +28,7 @@ const AppLayout = () => {
             className="flex items-center gap-1 hover:opacity-80 transition-opacity"
           >
             {/* Logo em formato de texto para não dar erro de imagem */}
-            <span className="text-2xl font-black text-[#0000FF]">Match</span>
+            <span className="text-2xl font-black text-[#00E5FF]">Match</span>
             <span className="text-2xl font-black text-[#FFD700]">Up</span>
           </Link>
         </div>
@@ -75,7 +75,7 @@ const AppLayout = () => {
         {/* Header Mobile */}
         <header className="md:hidden flex items-center justify-center p-4 border-b border-border bg-card sticky top-0 z-10">
           <Link to="/" className="flex items-center gap-1">
-            <span className="text-xl font-black text-[#0000FF]">Match</span>
+            <span className="text-xl font-black text-[#00E5FF]">Match</span>
             <span className="text-xl font-black text-[#FFD700]">Up</span>
           </Link>
         </header>
@@ -96,7 +96,7 @@ const AppLayout = () => {
               key={item.path}
               to={item.path}
               className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-                isActive ? "text-[#0000FF]" : "text-muted-foreground"
+                isActive ? "text-[#00E5FF]" : "text-muted-foreground"
               }`}
             >
               <Icon size={24} />

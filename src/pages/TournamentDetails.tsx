@@ -13,6 +13,8 @@ import {
   BookOpen,
   QrCode,
   Copy,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +52,16 @@ interface Participant {
   } | null;
 }
 
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    full_name: string | null;
+  } | null;
+}
+
 const TournamentDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -69,6 +81,59 @@ const TournamentDetails = () => {
   const myRegistration = participants.find(
     (p) => p.user_id === currentUser?.id,
   );
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  // Função para buscar as mensagens no banco
+  const fetchComments = async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from("tournament_comments")
+      .select("id, content, created_at, user_id, profiles(full_name)")
+      .eq("tournament_id", id)
+      .order("created_at", { ascending: true }); // Ordem cronológica (mais antigas em cima)
+
+    if (data) setComments(data as unknown as Comment[]);
+  };
+
+  // Puxa as mensagens assim que a página carrega
+  useEffect(() => {
+    fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // Função para enviar uma nova mensagem
+  const handleSendComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !currentUser || !id) return;
+
+    setIsSubmittingComment(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from("tournament_comments")
+        .insert({
+          tournament_id: id,
+          user_id: currentUser.id,
+          content: newComment.trim(),
+        });
+
+      if (error) throw error;
+
+      setNewComment(""); // Limpa o campo digitado
+      fetchComments(); // Atualiza a lista de mensagens na hora
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar",
+        description: error.message,
+      });
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
 
   // Simula a cópia do código
   const handleCopyPix = () => {
@@ -427,6 +492,81 @@ const TournamentDetails = () => {
                 {tournament.rules ||
                   "O organizador ainda não definiu as regras deste torneio."}
               </div>
+            </div>
+
+            {/* SEÇÃO DO BATE-PAPO / MURAL */}
+            <div className="mt-10 bg-card border border-border rounded-xl p-5 shadow-sm">
+              <h3 className="font-bold text-xl flex items-center gap-2 mb-6">
+                <MessageSquare className="text-[#00E5FF]" size={24} />
+                Mural do Torneio
+              </h3>
+
+              {/* Lista de Mensagens */}
+              <div className="space-y-4 mb-6 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+                {comments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8 bg-muted/30 rounded-lg border border-dashed border-border">
+                    Nenhuma mensagem ainda. Seja o primeiro a puxar assunto!
+                  </p>
+                ) : (
+                  comments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className={`flex flex-col ${comment.user_id === currentUser?.id ? "items-end" : "items-start"}`}
+                    >
+                      <div
+                        className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2 shadow-sm ${
+                          comment.user_id === currentUser?.id
+                            ? "bg-[#00E5FF] text-black rounded-tr-sm"
+                            : "bg-secondary border border-border text-foreground rounded-tl-sm"
+                        }`}
+                      >
+                        <p className="text-xs font-bold opacity-70 mb-1">
+                          {comment.user_id === currentUser?.id
+                            ? "Você"
+                            : comment.profiles?.full_name || "Jogador Oculto"}
+                        </p>
+                        <p className="text-sm break-words">{comment.content}</p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground mt-1 mx-1">
+                        {new Date(comment.created_at).toLocaleTimeString(
+                          "pt-BR",
+                          { hour: "2-digit", minute: "2-digit" },
+                        )}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Input de Enviar Mensagem */}
+              {currentUser ? (
+                <form
+                  onSubmit={handleSendComment}
+                  className="flex gap-2 mt-auto pt-4 border-t border-border"
+                >
+                  <input
+                    type="text"
+                    placeholder="Faça uma pergunta ou procure uma dupla..."
+                    className="flex-1 bg-background border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    disabled={isSubmittingComment}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isSubmittingComment || !newComment.trim()}
+                    className="bg-[#00E5FF] hover:bg-[#00E5FF]/80 text-black font-bold h-10 px-4"
+                  >
+                    <Send size={18} />
+                  </Button>
+                </form>
+              ) : (
+                <div className="bg-muted p-4 rounded-lg text-center border border-border mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Você precisa fazer login para participar da conversa.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
