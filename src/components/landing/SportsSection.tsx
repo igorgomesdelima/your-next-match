@@ -1,10 +1,10 @@
 const sports = [
-  { name: "Tennis", emoji: "🎾" },
+  { name: "Tênis", emoji: "🎾" },
   { name: "Beach Tennis", emoji: "🏖️" },
   { name: "Padel", emoji: "🏓" },
   { name: "Squash", emoji: "🏸" },
   { name: "Badminton", emoji: "🏸" },
-  { name: "Pickleball", emoji: "🥒" },
+  { name: "Peteca", emoji: "🪶" },
 ];
 
 const SportsSection = () => {
@@ -12,10 +12,12 @@ const SportsSection = () => {
     <section id="sports" className="py-24 bg-secondary">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-secondary-foreground">
-          Built for <span className="text-gradient-primary">Your Sport</span>
+          Feito para o{" "}
+          <span className="text-gradient-primary">Seu Esporte</span>
         </h2>
         <p className="text-secondary-foreground/60 mb-16 max-w-lg mx-auto">
-          Optimized scoring, formats, and rules for each racket sport.
+          Sistemas de pontuação, formatos e regras otimizados para a sua
+          modalidade favorita.
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -26,7 +28,9 @@ const SportsSection = () => {
               style={{ animationDelay: `${i * 0.08}s` }}
             >
               <div className="text-4xl mb-3">{sport.emoji}</div>
-              <p className="font-semibold text-sm text-secondary-foreground">{sport.name}</p>
+              <p className="font-semibold text-sm text-secondary-foreground">
+                {sport.name}
+              </p>
             </div>
           ))}
         </div>

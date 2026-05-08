@@ -98,8 +98,34 @@ const TournamentDetails = () => {
   };
 
   // Puxa as mensagens assim que a página carrega
+  // Puxa as mensagens e liga o TEMPO REAL
   useEffect(() => {
     fetchComments();
+
+    if (!id) return;
+
+    // Cria o "espião" para escutar novas mensagens desse torneio específico
+    const chatSubscription = supabase
+      .channel("chat-torneio")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "tournament_comments",
+          filter: `tournament_id=eq.${id}`, // Escuta só as mensagens DESTE torneio
+        },
+        () => {
+          // Quando o radar apitar que chegou mensagem nova, a gente atualiza a lista!
+          fetchComments();
+        },
+      )
+      .subscribe();
+
+    // Quando o usuário sair da página, a gente desliga o espião para não pesar o navegador
+    return () => {
+      supabase.removeChannel(chatSubscription);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 

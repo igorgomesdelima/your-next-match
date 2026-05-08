@@ -11,14 +11,21 @@ const CTASection = () => {
 
       <div className="relative z-10 container mx-auto px-4 text-center">
         <h2 className="text-3xl md:text-5xl font-black text-secondary-foreground mb-6">
-          Ready to <span className="text-gradient-primary">level up</span> your tournaments?
+          Pronto para{" "}
+          <span className="text-gradient-primary">elevar o nível</span> dos seus
+          torneios?
         </h2>
         <p className="text-secondary-foreground/60 text-lg mb-10 max-w-xl mx-auto">
-          Join thousands of players and organizers already using MatchUp.
+          Junte-se aos jogadores e organizadores que já estão transformando o
+          esporte com o MatchUp.
         </p>
         <Link to="/create">
-          <Button variant="hero" size="lg" className="text-base px-10 py-6 gap-2">
-            Get Started Free
+          <Button
+            variant="hero"
+            size="lg"
+            className="text-base px-10 py-6 gap-2"
+          >
+            Comece Grátis
             <ArrowRight size={20} />
           </Button>
         </Link>

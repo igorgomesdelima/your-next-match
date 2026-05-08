@@ -3,23 +3,27 @@ import { Zap, Shield, BarChart3, Smartphone } from "lucide-react";
 const features = [
   {
     icon: Zap,
-    title: "Lightning Fast",
-    description: "Create a full tournament in under 2 minutes. No clutter, no confusion.",
+    title: "Criação Relâmpago",
+    description:
+      "Configure um torneio completo em menos de 2 minutos. Sem complicação, pronto para rodar.",
   },
   {
     icon: Shield,
-    title: "No Ads, No Dark Patterns",
-    description: "Clean experience built for players, not advertisers. Your data stays yours.",
+    title: "Foco no Jogo, Sem Anúncios",
+    description:
+      "Experiência limpa criada para os jogadores. Sem propagandas chatas ou pegadinhas.",
   },
   {
     icon: BarChart3,
-    title: "Real-Time Results",
-    description: "Live bracket updates, instant score tracking, and automatic advancement.",
+    title: "Resultados em Tempo Real",
+    description:
+      "Atualização de chaves ao vivo, placares instantâneos e avanço automático para a próxima fase.",
   },
   {
     icon: Smartphone,
-    title: "Mobile-First Design",
-    description: "Beautiful on every screen. Check brackets and scores from the court.",
+    title: "Na Palma da Mão",
+    description:
+      "Design perfeito para qualquer tela. Acompanhe os jogos e os resultados direto da beira da quadra.",
   },
 ];
 
@@ -28,10 +32,11 @@ const FeaturesSection = () => {
     <section id="features" className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-4 text-foreground">
-          Why <span className="text-gradient-primary">MatchUp</span>?
+          Por que o <span className="text-gradient-primary">MatchUp</span>?
         </h2>
         <p className="text-center text-muted-foreground mb-16 max-w-lg mx-auto">
-          Everything you need to run tournaments like a pro — nothing you don't.
+          Tudo o que você precisa para organizar torneios como um profissional —
+          sem enrolação.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -44,8 +49,12 @@ const FeaturesSection = () => {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                 <f.icon className="text-primary" size={24} />
               </div>
-              <h3 className="font-bold text-lg mb-2 text-card-foreground">{f.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">{f.description}</p>
+              <h3 className="font-bold text-lg mb-2 text-card-foreground">
+                {f.title}
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {f.description}
+              </p>
             </div>
           ))}
         </div>
